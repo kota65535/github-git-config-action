@@ -29,8 +29,10 @@ jobs:
           user.name: Tomohiko Ozawa
           user.email: kota65535@gmail.com
           github-token: ${{ secrets.PERSONAL_TOKEN }}
-      - name: List config
+      - name: List local config
         run: git config --list
+      - name: List global config
+        run: git config --global --list
       - name: Checkout private repo
         run: |
           git clone https://github.com/kota65535/dotfiles
