@@ -5259,8 +5259,8 @@ const exec = __nccwpck_require__(3264);
 const getInputs = () => {
   // Defined inputs
   const scopes = core.getInput("scope").split(",");
-  const githubToken = core.getInput("github-token").split(",");
-  
+  const githubToken = core.getInput("github-token");
+
   // Dynamic inputs
   const { stdout } = exec("git", ["help", "-c"]);
   const configs = stdout.split("\n").reduce((a, k) => {
