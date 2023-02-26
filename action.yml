@@ -1,0 +1,15 @@
+name: "Git Config"
+description: "Configure git"
+branding:
+  icon: "lock"
+  color: "green"
+inputs:
+  scope:
+    description: Scope
+    default: local,global
+  github-token:
+    description: GitHub personal access token
+runs:
+  using: "node16"
+  main: "dist/index.js"
+  post: "dist/index.js"
