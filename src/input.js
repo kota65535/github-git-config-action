@@ -2,8 +2,8 @@ const core = require("@actions/core");
 const exec = require("./exec");
 
 const getInputs = () => {
-  const keys = exec("git", ["help", "-c"]).split("\n");
-  const configs = keys.reduce((a, k) => {
+  const { stdout } = exec("git", ["help", "-c"]);
+  const configs = stdout.split("\n").reduce((a, k) => {
     const v = core.getInput(k);
     if (!v) {
       return a;
