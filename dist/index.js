@@ -5241,7 +5241,7 @@ const execa = __nccwpck_require__(5447);
 const core = __nccwpck_require__(2186);
 
 const exec = (file, options) => {
-  core.info(`running command: ${file} ${options.join(" ")}`);
+  core.info(`running command: ${file} ${(options || []).join(" ")}`);
   return execa(file, options);
 };
 
@@ -5257,7 +5257,7 @@ const core = __nccwpck_require__(2186);
 const exec = __nccwpck_require__(3264);
 
 const getInputs = () => {
-  const keys = exec("git help -c").split("\n");
+  const keys = exec("git", ["help", "-c"]).split("\n");
   const configs = keys.reduce((a, k) => {
     const v = core.getInput(k);
     if (!v) {
