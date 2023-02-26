@@ -23,16 +23,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: List git config after checkout
+        run: |
+          git config --list
+          git config --global --list
       - name: Configure git
         uses: ./
         with:
           user.name: Tomohiko Ozawa
           user.email: kota65535@gmail.com
           github-token: ${{ secrets.PERSONAL_TOKEN }}
-      - name: List local config
-        run: git config --list
-      - name: List global config
-        run: git config --global --list
+      - name: List git config after the action
+        run: |
+          git config --list
+          git config --global --list
       - name: Checkout private repo
         run: |
           git clone https://github.com/kota65535/dotfiles

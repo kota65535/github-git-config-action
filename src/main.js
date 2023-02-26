@@ -9,8 +9,8 @@ function main(inputs) {
     }
   }
 
+  // Configure credentials if github-token input presents
   if (inputs.githubToken) {
-    // Configure credentials if github-token input presents
     const base64Token = Buffer.from(`${inputs.githubToken}:`).toString("base64");
     core.setSecret(base64Token);
     for (const s of inputs.scopes) {
