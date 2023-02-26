@@ -9,7 +9,7 @@ const getInputs = () => {
       return a;
     }
     return { ...a, [k]: v };
-  });
+  }, {});
 
   const scopes = core.getInput("scope").split(",");
   const ret = {
