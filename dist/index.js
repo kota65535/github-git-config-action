@@ -5257,6 +5257,11 @@ const core = __nccwpck_require__(2186);
 const exec = __nccwpck_require__(3264);
 
 const getInputs = () => {
+  // Defined inputs
+  const scopes = core.getInput("scope").split(",");
+  const githubToken = core.getInput("github-token").split(",");
+  
+  // Dynamic inputs
   const { stdout } = exec("git", ["help", "-c"]);
   const configs = stdout.split("\n").reduce((a, k) => {
     const v = core.getInput(k);
@@ -5266,10 +5271,10 @@ const getInputs = () => {
     return { ...a, [k]: v };
   }, {});
 
-  const scopes = core.getInput("scope").split(",");
   const ret = {
     configs,
     scopes,
+    githubToken,
   };
   console.info(ret);
   return ret;
@@ -5285,13 +5290,27 @@ module.exports = getInputs;
 
 const exec = __nccwpck_require__(3264);
 
-const main = (inputs) => {
+function main(inputs) {
   for (const s of inputs.scopes) {
     for (const [k, v] of Object.entries(inputs.configs)) {
       exec("git", ["config", `--${s}`, k, v]);
     }
   }
-};
+  configureGitHubToken(inputs.githubToken);
+}
+
+function configureGitHubToken(inputs) {
+  if (!inputs.githubToken) {
+    return;
+  }
+
+  const base64Token = Buffer.from(`${inputs.githubToken}:`).toString("base64");
+
+  for (const s of inputs.scopes) {
+    exec("git", ["config", `--${s}`, "http.https://github.com/.extraheader", `Authorization: Basic ${base64Token}`]);
+    exec("git", ["config", `--${s}`, "url.https://github.com/.insteadOf", "git@github.com:"]);
+  }
+}
 
 module.exports = main;
 

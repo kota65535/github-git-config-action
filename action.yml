@@ -6,8 +6,9 @@ branding:
 inputs:
   scope:
     description: Scope
-    required: true
-    default: local
+    default: local,global
+  github-token:
+    description: GitHub personal access token
 runs:
   using: "node16"
   main: "dist/index.js"
