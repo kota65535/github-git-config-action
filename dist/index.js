@@ -2822,10 +2822,12 @@ const getInputs = () => {
     .reduce((a, v) => ({ ...a, [v]: v }), {});
 
   const scopes = core.getInput("scope").split(",");
-  return {
+  const ret = {
     configs,
     scopes,
   };
+  console.info(ret);
+  return ret;
 };
 
 module.exports = getInputs;
@@ -2840,10 +2842,10 @@ const exec = __nccwpck_require__(264);
 
 const main = (inputs) => {
   for (const s of inputs.scopes) {
-    for (const c of inputs.configs) {
-      const cmd = `git config --${s} ${c}`
-      console.info(cmd)
-      exec(cmd)
+    for (const [k, v] of Object.entries(inputs.configs)) {
+      const cmd = `git config --${s} '${k}'='${v}'`;
+      console.info(cmd);
+      exec(cmd);
     }
   }
 };

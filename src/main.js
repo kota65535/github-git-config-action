@@ -2,10 +2,10 @@ const exec = require("./exec");
 
 const main = (inputs) => {
   for (const s of inputs.scopes) {
-    for (const c of inputs.configs) {
-      const cmd = `git config --${s} ${c}`
-      console.info(cmd)
-      exec(cmd)
+    for (const [k, v] of Object.entries(inputs.configs)) {
+      const cmd = `git config --${s} '${k}'='${v}'`;
+      console.info(cmd);
+      exec(cmd);
     }
   }
 };
