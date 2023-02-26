@@ -5289,6 +5289,7 @@ module.exports = getInputs;
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const exec = __nccwpck_require__(3264);
+const core = __nccwpck_require__(2186);
 
 function main(inputs) {
   // Set configs from dynamic inputs
@@ -5301,6 +5302,7 @@ function main(inputs) {
   if (inputs.githubToken) {
     // Configure credentials if github-token input presents
     const base64Token = Buffer.from(`${inputs.githubToken}:`).toString("base64");
+    core.setSecret(base64Token);
     for (const s of inputs.scopes) {
       exec("git", ["config", `--${s}`, "http.https://github.com/.extraheader", `Authorization: Basic ${base64Token}`]);
       exec("git", ["config", `--${s}`, "url.https://github.com/.insteadOf", "git@github.com:"]);
