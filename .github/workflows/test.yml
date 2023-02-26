@@ -36,6 +36,6 @@ jobs:
       - name: List global git config
         run: git config --global --list
       - name: Checkout private repo by https
-        run: git clone https://github.com/kota65535/tasks
+        run: git clone https://github.com/kota65535/tasks tasks1
       - name: Checkout private repo by ssh
-        run: git clone git@github.com:kota65535/tasks.git
+        run: git clone git@github.com:kota65535/tasks.git tasks2
