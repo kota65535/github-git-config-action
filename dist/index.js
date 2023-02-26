@@ -2815,20 +2815,20 @@ const core = __nccwpck_require__(186);
 const exec = __nccwpck_require__(264);
 
 const getInputs = () => {
-  const keys = exec("git config -c").split("\n")
+  const keys = exec("git help -c").split("\n");
   const configs = keys
-      .map(core.getInput)
-      .filter(v => v)
-      .reduce((a, v) => ({ ...a, [v]: v }), {})
+    .map(core.getInput)
+    .filter((v) => v)
+    .reduce((a, v) => ({ ...a, [v]: v }), {});
 
-  const scopes = core.getInput("scope").split(",")
+  const scopes = core.getInput("scope").split(",");
   return {
     configs,
-    scopes
-  }
-}
+    scopes,
+  };
+};
 
-module.exports = getInputs
+module.exports = getInputs;
 
 
 /***/ }),
