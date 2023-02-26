@@ -1,14 +1,14 @@
 name: "Git Config"
-description: "Configure git"
+description: "Configure git credentials, username etc."
 branding:
-  icon: "lock"
-  color: "green"
+  icon: "settings"
+  color: "orange"
 inputs:
   scope:
-    description: Scope
-    default: local,global
+    description: Scope (global, local etc). Comma-separated values are allowed.
+    default: global,local
   github-token:
-    description: GitHub personal access token
+    description: GitHub personal access token used as git credentials
 runs:
   using: "node16"
   main: "dist/index.js"
