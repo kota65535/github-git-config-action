@@ -2,7 +2,10 @@
   "name": "github-git-config-action",
   "version": "2.0.2",
   "description": "",
-  "keywords": ["github", "actions"],
+  "keywords": [
+    "github",
+    "actions"
+  ],
   "homepage": "https://github.com/kota65535/github-git-config-action#readme",
   "bugs": {
     "url": "https://github.com/kota65535/github-git-config-action/issues"
@@ -23,7 +26,7 @@
   "dependencies": {
     "@actions/core": "1.10.0",
     "@actions/github": "5.1.1",
-    "shelljs.exec": "1.1.8"
+    "execa": "5.1.1"
   },
   "devDependencies": {
     "@vercel/ncc": "0.36.0",

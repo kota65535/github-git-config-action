@@ -1,14 +1,9 @@
-const shelljsExec = require("shelljs.exec");
+const execa = require("execa");
 const core = require("@actions/core");
 
-const exec = (cmd) => {
-  core.info(`running command: ${cmd}`);
-  const res = shelljsExec(cmd);
-  if (res.code !== 0) {
-    core.warning(res.stdout);
-    throw new Error(`command: ${cmd} returned ${res.code}`);
-  }
-  return res.stdout
+const exec = (file, options) => {
+  core.info(`running command: ${file} ${options.join(" ")}`);
+  return execa(file, options);
 };
 
 module.exports = exec;
