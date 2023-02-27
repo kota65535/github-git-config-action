@@ -5482,7 +5482,7 @@ const main = __nccwpck_require__(1713);
 const getInputs = __nccwpck_require__(6);
 
 try {
-  const inputs = getInputs()
+  const inputs = getInputs();
   main(inputs);
 } catch (error) {
   core.setFailed(error.message);
