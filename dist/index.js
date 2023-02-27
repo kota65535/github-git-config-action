@@ -5314,8 +5314,8 @@ function main(inputs) {
     // cf https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L62
     exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
 
-    exec("git", ["config", `--${inputs.scopes}`, extraHeaderKey, `Authorization: Basic ${base64Token}`]);
-    exec("git", ["config", `--${inputs.scopes}`, urlInsteadOfKey, `git@${githubHost}:`]);
+    exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, `Authorization: Basic ${base64Token}`]);
+    exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, `git@${githubHost}:`]);
   }
 }
 
