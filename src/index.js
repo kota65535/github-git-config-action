@@ -3,7 +3,7 @@ const main = require("./main");
 const getInputs = require("./input");
 
 try {
-  const inputs = getInputs()
+  const inputs = getInputs();
   main(inputs);
 } catch (error) {
   core.setFailed(error.message);

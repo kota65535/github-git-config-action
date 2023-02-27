@@ -3,7 +3,7 @@ const exec = require("./exec");
 
 const getInputs = () => {
   // Defined inputs
-  const scopes = core.getInput("scope").split(",");
+  const scope = core.getInput("scope");
   const githubToken = core.getInput("github-token");
 
   // Dynamic inputs
@@ -17,9 +17,9 @@ const getInputs = () => {
   }, {});
 
   const ret = {
-    configs,
-    scopes,
+    scope,
     githubToken,
+    configs,
   };
   console.info(ret);
   return ret;
