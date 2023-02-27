@@ -5258,7 +5258,7 @@ const exec = __nccwpck_require__(3264);
 
 const getInputs = () => {
   // Defined inputs
-  const scopes = core.getInput("scope").split(",");
+  const scope = core.getInput("scope");
   const githubToken = core.getInput("github-token");
 
   // Dynamic inputs
@@ -5272,9 +5272,9 @@ const getInputs = () => {
   }, {});
 
   const ret = {
-    configs,
-    scopes,
+    scope,
     githubToken,
+    configs,
   };
   console.info(ret);
   return ret;
@@ -5293,20 +5293,28 @@ const core = __nccwpck_require__(2186);
 
 function main(inputs) {
   // Set configs from dynamic inputs
-  for (const s of inputs.scopes) {
-    for (const [k, v] of Object.entries(inputs.configs)) {
-      exec("git", ["config", `--${s}`, k, v]);
-    }
+  for (const [k, v] of Object.entries(inputs.configs)) {
+    exec("git", ["config", `--${inputs.scope}`, k, v]);
   }
 
   // Configure credentials if github-token input presents
   if (inputs.githubToken) {
     const base64Token = Buffer.from(`${inputs.githubToken}:`).toString("base64");
     core.setSecret(base64Token);
-    for (const s of inputs.scopes) {
-      exec("git", ["config", `--${s}`, "http.https://github.com/.extraheader", `Authorization: Basic ${base64Token}`]);
-      exec("git", ["config", `--${s}`, "url.https://github.com/.insteadOf", "git@github.com:"]);
-    }
+
+    // TODO: Enable to replace the URL for GitHub Enterprise
+    const extraHeaderKey = "http.https://github.com/.extraHeader";
+    const urlInsteadOfKey = "url.https://github.com/.insteadOf";
+
+    // Remove checkout action's persistent credentials to avoid duplication of Authorization headers.
+    // cf. https://github.com/actions/checkout/issues/162
+    // Value pattern should be case-insensitive, but the current git version (2.36.1) does not allow the flag "(?i)".
+    // So we have to use the exact pattern to match.
+    // cf https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L62
+    exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
+
+    exec("git", ["config", `--${inputs.scopes}`, extraHeaderKey, `Authorization: Basic ${base64Token}`]);
+    exec("git", ["config", `--${inputs.scopes}`, urlInsteadOfKey, "git@github.com:"]);
   }
 }
 

@@ -5,8 +5,8 @@ branding:
   color: "orange"
 inputs:
   scope:
-    description: Scope (global, local etc). Comma-separated values are allowed.
-    default: global,local
+    description: Scope (global, local etc)
+    default: global
   github-token:
     description: GitHub personal access token used as git credentials
 runs:
