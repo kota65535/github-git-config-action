@@ -12,9 +12,10 @@ function main(inputs) {
     const base64Token = Buffer.from(`${inputs.githubToken}:`).toString("base64");
     core.setSecret(base64Token);
 
-    // TODO: Enable to replace the URL for GitHub Enterprise
-    const extraHeaderKey = "http.https://github.com/.extraHeader";
-    const urlInsteadOfKey = "url.https://github.com/.insteadOf";
+    // TODO: Enable to replace the hostname for GitHub Enterprise
+    const githubHost = "github.com";
+    const extraHeaderKey = `http.https://${githubHost}/.extraHeader`;
+    const urlInsteadOfKey = `url.https://${githubHost}/.insteadOf`;
 
     // Remove checkout action's persistent credentials to avoid duplication of Authorization headers.
     // cf. https://github.com/actions/checkout/issues/162
@@ -24,7 +25,7 @@ function main(inputs) {
     exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
 
     exec("git", ["config", `--${inputs.scopes}`, extraHeaderKey, `Authorization: Basic ${base64Token}`]);
-    exec("git", ["config", `--${inputs.scopes}`, urlInsteadOfKey, "git@github.com:"]);
+    exec("git", ["config", `--${inputs.scopes}`, urlInsteadOfKey, `git@${githubHost}:`]);
   }
 }
 
