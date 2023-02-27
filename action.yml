@@ -1,4 +1,4 @@
-name: "Git Config"
+name: "Git Config & Credentials"
 description: "Configure git credentials, username etc."
 branding:
   icon: "settings"
