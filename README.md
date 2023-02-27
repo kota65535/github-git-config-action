@@ -18,8 +18,8 @@ GitHub Action for configuring git credentials, username etc.
 
 ## Inputs
 
-| Name                 | Description                                                                             | Required | Default        |
-|----------------------|-----------------------------------------------------------------------------------------|----------|----------------|
-| `scope`              | Scope (global, local etc).<br>Comma-separated values are allowed.                       | Yes      | `local,global` |
-| `github-token`       | GitHub Personal Access Token used as git credentials                                    | No       | N/A            |
-| **Option variables** | Option variables listed in [git-config](https://git-scm.com/docs/git-config#_variables) | No       | N/A            |
+| Name                      | Description                                                                                                                     | Required | Default  |
+|---------------------------|---------------------------------------------------------------------------------------------------------------------------------|----------|----------|
+| `scope`                   | Scope (ex: `global`, `local`).<br>See [here](https://git-scm.com/docs/git-config#SCOPES) for more details                       | Yes      | `global` |
+| `github-token`            | GitHub Personal Access Token used as git credentials                                                                            | No       | N/A      |
+| **Option variable names** | Option variable (ex. `user.name`, `user.email`).<br>See [here](https://git-scm.com/docs/git-config#_variables) for more details | No       | N/A      |

@@ -5311,7 +5311,7 @@ function main(inputs) {
     // cf. https://github.com/actions/checkout/issues/162
     // Value pattern should be case-insensitive, but the current git version (2.36.1) does not allow the flag "(?i)".
     // So we have to use the exact pattern to match.
-    // cf https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L62
+    // cf. https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L62
     exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
 
     exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, `Authorization: Basic ${base64Token}`]);
