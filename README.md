@@ -3,7 +3,7 @@
 GitHub Action for configuring git credentials, username etc.
 
 - All [git-config](https://git-scm.com/docs/git-config#_variables) options are available
-- Easily overrides [checkout](https://github.com/actions/checkout) action's persistent credentials
+- Easily overrides [checkout](https://github.com/actions/checkout) action's `persist-credentials`
 
 ## Usage
 
