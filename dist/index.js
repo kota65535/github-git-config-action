@@ -5299,7 +5299,8 @@ function main(inputs) {
 
   // Configure credentials if github-token input presents
   if (inputs.githubToken) {
-    const base64Token = Buffer.from(`${inputs.githubToken}:`).toString("base64");
+    // cf. https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L57
+    const base64Token = Buffer.from(`x-access-token:${inputs.githubToken}`, "utf8").toString("base64");
     core.setSecret(base64Token);
 
     // TODO: Enable to replace the hostname for GitHub Enterprise
