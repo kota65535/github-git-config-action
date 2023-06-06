@@ -22,4 +22,4 @@ GitHub Action for configuring git credentials, username etc.
 |----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|----------|----------|
 | `scope`                                                                    | Scope (ex: `global`, `local`).<br>See [here](https://git-scm.com/docs/git-config#SCOPES) for more details | Yes      | `global` |
 | `github-token`                                                             | GitHub personal access token to use as git credentials                                                    | No       | N/A      |
-| [**All config variables**](https://git-scm.com/docs/git-config#_variables) | Git config variable (ex. `user.name`, `user.email`) to set                                                | No       | N/A      |
+| [**All config variables**](https://git-scm.com/docs/git-config#_variables) | Value to be set for the git config variable (ex. `user.name`, `user.email`)                               | No       | N/A      |
