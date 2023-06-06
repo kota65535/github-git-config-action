@@ -18,8 +18,8 @@ GitHub Action for configuring git credentials, username etc.
 
 ## Inputs
 
-| Name                      | Description                                                                                                                            | Required | Default  |
-|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------|----------|----------|
-| `scope`                   | Scope (ex: `global`, `local`).<br>See [here](https://git-scm.com/docs/git-config#SCOPES) for more details                              | Yes      | `global` |
-| `github-token`            | GitHub personal access token to use as git credentials                                                                                 | No       | N/A      |
-| **Option variable names** | Option variable (ex. `user.name`, `user.email`) to set.<br>See [here](https://git-scm.com/docs/git-config#_variables) for more details | No       | N/A      |
+| Name                                                                       | Description                                                                                               | Required | Default  |
+|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|----------|----------|
+| `scope`                                                                    | Scope (ex: `global`, `local`).<br>See [here](https://git-scm.com/docs/git-config#SCOPES) for more details | Yes      | `global` |
+| `github-token`                                                             | GitHub personal access token to use as git credentials                                                    | No       | N/A      |
+| [**All config variables**](https://git-scm.com/docs/git-config#_variables) | Git config variable (ex. `user.name`, `user.email`) to set                                                | No       | N/A      |
