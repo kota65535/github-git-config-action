@@ -10,5 +10,5 @@ inputs:
   github-token:
     description: GitHub personal access token used as git credentials
 runs:
-  using: "node16"
+  using: "node20"
   main: "dist/index.js"
