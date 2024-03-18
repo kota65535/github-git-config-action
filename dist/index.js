@@ -28144,12 +28144,12 @@ which.sync = whichSync
 /***/ 3264:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const { $ } = __nccwpck_require__(5447);
+const execa = __nccwpck_require__(5447);
 const core = __nccwpck_require__(2186);
 
 const exec = (file, options) => {
   core.info(`running command: ${file} ${(options || []).join(" ")}`);
-  return $(options).sync(file);
+  return execa.sync(file, options);
 };
 
 module.exports = exec;
