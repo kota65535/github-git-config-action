@@ -26,7 +26,7 @@ jobs:
       - name: List local git config after checkout
         run: git config --local --list
       - name: Configure git
-        uses: ./
+        uses: kota65535/github-git-config-action@v1
         with:
           user.name: Tomohiko Ozawa
           user.email: kota65535@gmail.com
