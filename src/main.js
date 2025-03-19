@@ -1,5 +1,6 @@
 const exec = require("./exec");
 const core = require("@actions/core");
+const { getExtraHeaderKey, getUrlInsteadOfKey } = require("./input");
 
 function main(inputs) {
   // Set configs from dynamic inputs
@@ -13,10 +14,9 @@ function main(inputs) {
     const base64Token = Buffer.from(`x-access-token:${inputs.githubToken}`, "utf8").toString("base64");
     core.setSecret(base64Token);
 
-    // TODO: Enable to replace the hostname for GitHub Enterprise
-    const githubHost = "github.com";
-    const extraHeaderKey = `http.https://${githubHost}/.extraHeader`;
-    const urlInsteadOfKey = `url.https://${githubHost}/.insteadOf`;
+    const githubHost = inputs.githubHost;
+    const extraHeaderKey = getExtraHeaderKey(githubHost);
+    const urlInsteadOfKey = getUrlInsteadOfKey(githubHost);
 
     // Remove checkout action's persistent credentials to avoid duplication of Authorization headers.
     // cf. https://github.com/actions/checkout/issues/162

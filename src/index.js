@@ -1,6 +1,6 @@
 const core = require("@actions/core");
 const main = require("./main");
-const getInputs = require("./input");
+const { getInputs } = require("./input");
 
 try {
   const inputs = getInputs();
