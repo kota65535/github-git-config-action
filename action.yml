@@ -9,6 +9,10 @@ inputs:
     default: global
   github-token:
     description: GitHub personal access token used as git credentials
+  github-host:
+    description: GitHub server hostname
+    default: github.com
+    
 runs:
   using: "node20"
   main: "dist/index.js"

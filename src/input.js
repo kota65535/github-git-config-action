@@ -5,6 +5,7 @@ const getInputs = () => {
   // Defined inputs
   const scope = core.getInput("scope");
   const githubToken = core.getInput("github-token");
+  const githubHost = core.getInput("github-host");
 
   // Dynamic inputs
   const { stdout } = exec("git", ["help", "-c"]);
@@ -19,10 +20,18 @@ const getInputs = () => {
   const ret = {
     scope,
     githubToken,
+    githubHost,
     configs,
   };
   console.info(ret);
   return ret;
 };
 
-module.exports = getInputs;
+const getExtraHeaderKey = (githubHost) => `http.https://${githubHost}/.extraHeader`;
+const getUrlInsteadOfKey = (githubHost) => `url.https://${githubHost}/.insteadOf`;
+
+module.exports = {
+  getInputs,
+  getExtraHeaderKey,
+  getUrlInsteadOfKey,
+};
