@@ -18,8 +18,9 @@ GitHub Action for configuring git credentials, username etc.
 
 ## Inputs
 
-| Name                                                                       | Description                                                                                               | Required | Default  |
-|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|----------|----------|
-| `scope`                                                                    | Scope (ex: `global`, `local`).<br>See [here](https://git-scm.com/docs/git-config#SCOPES) for more details | Yes      | `global` |
-| `github-token`                                                             | GitHub personal access token to use as git credentials                                                    | No       | N/A      |
-| [**All config variables**](https://git-scm.com/docs/git-config#_variables) | Value to be set for the git config variable (ex. `user.name`, `user.email`)                               | No       | N/A      |
+| Name                                                                       | Description                                                                                               | Required | Default      |
+|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|----------|--------------|
+| `scope`                                                                    | Scope (ex: `global`, `local`).<br>See [here](https://git-scm.com/docs/git-config#SCOPES) for more details | No       | `global`     |
+| `github-token`                                                             | GitHub personal access token to use as git credentials                                                    | No       | N/A          |
+| `github-host`                                                              | GitHub server hostname                                                                                    | No       | `github.com` |
+| [**All config variables**](https://git-scm.com/docs/git-config#_variables) | Value to be set for the git config variable (ex. `user.name`, `user.email`)                               | No       | N/A          |
