@@ -24,7 +24,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Runner Temp
-        run: ls -l ${RUNNER_TEMP}
+        run: |
+          ls -l ${RUNNER_TEMP}
+          cat ${RUNNER_TEMP}/git-credentials-*.config
+          
       - name: List local git config after checkout
         run: git config --local --list
       - name: Configure git
