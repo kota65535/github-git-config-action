@@ -1,7 +1,7 @@
 const exec = require("./exec");
 const core = require("@actions/core");
 const { getExtraHeaderKey, getUrlInsteadOfKey } = require("./input");
-const { configureCheckoutCredentials } = require("./checkout-v6");
+const { removeCheckoutCredentials } = require("./checkout-v6");
 
 function main(inputs) {
   // Set configs from dynamic inputs
@@ -21,29 +21,23 @@ function main(inputs) {
     const extraHeaderValue = `AUTHORIZATION: basic ${base64Token}`;
     const urlInsteadOfValue = `git@${githubHost}:`;
 
-    // Update checkout action's persistent credentials to avoid duplication of Authorization headers.
+    // Remove checkout action's persistent credentials to avoid duplication of Authorization headers.
     // checkout v6+ stores credentials under RUNNER_TEMP and includes them via includeIf.
-    const configuredV6 = configureCheckoutCredentials(
-      extraHeaderKey,
-      extraHeaderValue,
-      urlInsteadOfKey,
-      urlInsteadOfValue,
-    );
+    removeCheckoutCredentials();
 
     // Remove checkout action's legacy local config (pre v6).
     // cf. https://github.com/actions/checkout/issues/162
     // Value pattern should be case-insensitive, but the current git version (2.36.1) does not allow the flag "(?i)".
     // So we have to use the exact pattern to match.
     // cf. https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L62
-    if (!configuredV6) {
-      try {
-        exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
-      } catch (error) {
-        core.warning(error.message);
-      }
-      exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, extraHeaderValue]);
-      exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, urlInsteadOfValue]);
+    try {
+      exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
+    } catch (error) {
+      core.warning(error.message);
     }
+    
+    exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, extraHeaderValue]);
+    exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, urlInsteadOfValue]);
   }
 }
 

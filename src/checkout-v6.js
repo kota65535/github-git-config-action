@@ -6,39 +6,22 @@ const exec = require("./exec");
 const CHECKOUT_CREDENTIALS_PREFIX = "git-credentials-";
 const CHECKOUT_CREDENTIALS_SUFFIX = ".config";
 
-const normalizePath = (value) => {
-  if (!value) {
-    return "";
-  }
-  const normalized = path.normalize(value);
-  return process.platform === "win32" ? normalized.toLowerCase() : normalized;
-};
-
 const isWithin = (root, candidate) => {
-  if (!root || !candidate) {
-    return false;
-  }
-  const rootWithSep = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
-  return candidate === root || candidate.startsWith(rootWithSep);
+  if (!root || !candidate) return false;
+  const rel = path.relative(root, candidate);
+  return rel && !rel.startsWith("..") && !path.isAbsolute(rel);
 };
 
 const isCheckoutCredentialsPath = (value) => {
   if (!value) {
     return false;
   }
-  const normalized = normalizePath(value);
+  const normalized = path.normalize(value);
   const baseName = path.basename(normalized);
   if (!baseName.startsWith(CHECKOUT_CREDENTIALS_PREFIX) || !baseName.endsWith(CHECKOUT_CREDENTIALS_SUFFIX)) {
     return false;
   }
-
-  const runnerTemp = process.env.RUNNER_TEMP ? normalizePath(process.env.RUNNER_TEMP) : "";
-  const containerTemp = normalizePath("/github/runner_temp");
-
-  if (runnerTemp && isWithin(runnerTemp, normalized)) {
-    return true;
-  }
-  return isWithin(containerTemp, normalized);
+  return isWithin(process.env.RUNNER_TEMP, normalized);
 };
 
 const listIncludeIfPaths = () => {
@@ -63,67 +46,18 @@ const listIncludeIfPaths = () => {
   }
 };
 
-const listCheckoutCredentialsPaths = () => {
+const removeCheckoutV6Credentials = () => {
   const entries = listIncludeIfPaths();
-  if (entries.length === 0) {
-    return [];
-  }
-  console.log(`Found includeIf paths`, entries);
-
-  const credentialPaths = new Set();
-  for (const { value } of entries) {
+  for (const { key, value } of entries) {
     if (!isCheckoutCredentialsPath(value)) {
       continue;
     }
-    console.log(`adding`, value);
-    if (value) {
-      credentialPaths.add(value);
-    }
-  }
-
-  return [...credentialPaths];
-};
-
-const canWriteCredentialsPath = (filePath) => {
-  const dirPath = path.dirname(filePath);
-  return fs.existsSync(dirPath);
-};
-
-const setConfigInFile = (filePath, key, value) => {
-  try {
-    exec("git", ["config", "--file", filePath, "--unset-all", key]);
-  } catch (error) {
-    if (error.exitCode !== 5 && error.exitCode !== 1) {
-      core.warning(error.message);
-    }
-  }
-
-  exec("git", ["config", "--file", filePath, key, value]);
-};
-
-const configureCheckoutV6Credentials = (extraHeaderKey, extraHeaderValue, urlInsteadOfKey, urlInsteadOfValue) => {
-  const credentialPaths = listCheckoutCredentialsPaths();
-  if (credentialPaths.length === 0) {
-    return false;
-  }
-  console.log(`Configuring checkout v6 credentials in paths:`, credentialPaths);
-
-  let configured = false;
-  for (const filePath of credentialPaths) {
-    if (!canWriteCredentialsPath(filePath)) {
-      core.warning(`credentials path is not writable: ${filePath}`);
-      continue;
-    }
     try {
-      setConfigInFile(filePath, extraHeaderKey, extraHeaderValue);
-      setConfigInFile(filePath, urlInsteadOfKey, urlInsteadOfValue);
-      configured = true;
+      exec("git", ["config", "--local", "--unset-all", key]);
     } catch (error) {
       core.warning(error.message);
     }
   }
-
-  return configured;
 };
 
-module.exports = { configureCheckoutCredentials: configureCheckoutV6Credentials };
+module.exports = { removeCheckoutCredentials: removeCheckoutV6Credentials };
