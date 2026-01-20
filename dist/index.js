@@ -29674,12 +29674,14 @@ const listCheckoutCredentialsPaths = () => {
   if (entries.length === 0) {
     return [];
   }
+  console.log(`Found includeIf paths`, entries);
 
   const credentialPaths = new Set();
   for (const { value } of entries) {
     if (!isCheckoutCredentialsPath(value)) {
       continue;
     }
+    console.log(`adding`, value);
     if (value) {
       credentialPaths.add(value);
     }
@@ -29710,12 +29712,10 @@ const configureCheckoutV6Credentials = (extraHeaderKey, extraHeaderValue, urlIns
   if (credentialPaths.length === 0) {
     return false;
   }
+  console.log(`Configuring checkout v6 credentials in paths:`, credentialPaths);
 
   let configured = false;
   for (const filePath of credentialPaths) {
-    if (!isCheckoutCredentialsPath(filePath)) {
-      continue;
-    }
     if (!canWriteCredentialsPath(filePath)) {
       core.warning(`credentials path is not writable: ${filePath}`);
       continue;
