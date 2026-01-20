@@ -29602,6 +29602,141 @@ which.sync = whichSync
 
 /***/ }),
 
+/***/ 7922:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const core = __nccwpck_require__(7484);
+const fs = __nccwpck_require__(9896);
+const path = __nccwpck_require__(6928);
+const exec = __nccwpck_require__(5020);
+
+const CHECKOUT_CREDENTIALS_PREFIX = "git-credentials-";
+const CHECKOUT_CREDENTIALS_SUFFIX = ".config";
+
+const normalizePath = (value) => {
+  if (!value) {
+    return "";
+  }
+  const normalized = path.normalize(value);
+  return process.platform === "win32" ? normalized.toLowerCase() : normalized;
+};
+
+const isWithin = (root, candidate) => {
+  if (!root || !candidate) {
+    return false;
+  }
+  const rootWithSep = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+  return candidate === root || candidate.startsWith(rootWithSep);
+};
+
+const isCheckoutCredentialsPath = (value) => {
+  if (!value) {
+    return false;
+  }
+  const normalized = normalizePath(value);
+  const baseName = path.basename(normalized);
+  if (!baseName.startsWith(CHECKOUT_CREDENTIALS_PREFIX) || !baseName.endsWith(CHECKOUT_CREDENTIALS_SUFFIX)) {
+    return false;
+  }
+
+  const runnerTemp = process.env.RUNNER_TEMP ? normalizePath(process.env.RUNNER_TEMP) : "";
+  const containerTemp = normalizePath("/github/runner_temp");
+
+  if (runnerTemp && isWithin(runnerTemp, normalized)) {
+    return true;
+  }
+  return isWithin(containerTemp, normalized);
+};
+
+const listIncludeIfPaths = () => {
+  try {
+    const { stdout } = exec("git", ["config", "--null", "--local", "--get-regexp", "^includeIf\\.gitdir:.*\\.path$"]);
+    if (!stdout) {
+      return [];
+    }
+    const parts = stdout.split("\0").filter(Boolean);
+    const entries = [];
+    for (let i = 0; i < parts.length; i += 2) {
+      entries.push({ key: parts[i], value: parts[i + 1] || "" });
+    }
+    return entries;
+  } catch (error) {
+    if (error.exitCode === 1) {
+      return [];
+    }
+    core.warning(error.message);
+    return [];
+  }
+};
+
+const listCheckoutCredentialsPaths = () => {
+  const entries = listIncludeIfPaths();
+  if (entries.length === 0) {
+    return [];
+  }
+
+  const credentialPaths = new Set();
+  for (const { value } of entries) {
+    if (!isCheckoutCredentialsPath(value)) {
+      continue;
+    }
+    if (value) {
+      credentialPaths.add(value);
+    }
+  }
+
+  return [...credentialPaths];
+};
+
+const canWriteCredentialsPath = (filePath) => {
+  const dirPath = path.dirname(filePath);
+  return fs.existsSync(dirPath);
+};
+
+const setConfigInFile = (filePath, key, value) => {
+  try {
+    exec("git", ["config", "--file", filePath, "--unset-all", key]);
+  } catch (error) {
+    if (error.exitCode !== 5 && error.exitCode !== 1) {
+      core.warning(error.message);
+    }
+  }
+
+  exec("git", ["config", "--file", filePath, key, value]);
+};
+
+const configureCheckoutV6Credentials = (extraHeaderKey, extraHeaderValue, urlInsteadOfKey, urlInsteadOfValue) => {
+  const credentialPaths = listCheckoutCredentialsPaths();
+  if (credentialPaths.length === 0) {
+    return false;
+  }
+
+  let configured = false;
+  for (const filePath of credentialPaths) {
+    if (!isCheckoutCredentialsPath(filePath)) {
+      continue;
+    }
+    if (!canWriteCredentialsPath(filePath)) {
+      core.warning(`credentials path is not writable: ${filePath}`);
+      continue;
+    }
+    try {
+      setConfigInFile(filePath, extraHeaderKey, extraHeaderValue);
+      setConfigInFile(filePath, urlInsteadOfKey, urlInsteadOfValue);
+      configured = true;
+    } catch (error) {
+      core.warning(error.message);
+    }
+  }
+
+  return configured;
+};
+
+module.exports = { configureCheckoutCredentials: configureCheckoutV6Credentials };
+
+
+/***/ }),
+
 /***/ 5020:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -29668,6 +29803,7 @@ module.exports = {
 const exec = __nccwpck_require__(5020);
 const core = __nccwpck_require__(7484);
 const { getExtraHeaderKey, getUrlInsteadOfKey } = __nccwpck_require__(5409);
+const { configureCheckoutCredentials } = __nccwpck_require__(7922);
 
 function main(inputs) {
   // Set configs from dynamic inputs
@@ -29684,20 +29820,32 @@ function main(inputs) {
     const githubHost = inputs.githubHost;
     const extraHeaderKey = getExtraHeaderKey(githubHost);
     const urlInsteadOfKey = getUrlInsteadOfKey(githubHost);
+    const extraHeaderValue = `AUTHORIZATION: basic ${base64Token}`;
+    const urlInsteadOfValue = `git@${githubHost}:`;
 
-    // Remove checkout action's persistent credentials to avoid duplication of Authorization headers.
+    // Update checkout action's persistent credentials to avoid duplication of Authorization headers.
+    // checkout v6+ stores credentials under RUNNER_TEMP and includes them via includeIf.
+    const configuredV6 = configureCheckoutCredentials(
+      extraHeaderKey,
+      extraHeaderValue,
+      urlInsteadOfKey,
+      urlInsteadOfValue,
+    );
+
+    // Remove checkout action's legacy local config (pre v6).
     // cf. https://github.com/actions/checkout/issues/162
     // Value pattern should be case-insensitive, but the current git version (2.36.1) does not allow the flag "(?i)".
     // So we have to use the exact pattern to match.
     // cf. https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L62
-    try {
-      exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
-    } catch (error) {
-      core.warning(error.message);
+    if (!configuredV6) {
+      try {
+        exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
+      } catch (error) {
+        core.warning(error.message);
+      }
+      exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, extraHeaderValue]);
+      exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, urlInsteadOfValue]);
     }
-
-    exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, `AUTHORIZATION: basic ${base64Token}`]);
-    exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, `git@${githubHost}:`]);
   }
 }
 
