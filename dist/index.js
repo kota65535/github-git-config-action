@@ -29654,7 +29654,7 @@ const listIncludeIfPaths = () => {
     if (!stdout) {
       return [];
     }
-    const lines = stdout.split("\0");
+    const lines = stdout.split("\0").filter(Boolean);
     const entries = [];
     for (const line of lines) {
       const parts = line.split("\n");
