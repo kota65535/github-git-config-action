@@ -47,10 +47,11 @@ const listIncludeIfPaths = () => {
     if (!stdout) {
       return [];
     }
-    const parts = stdout.split("\0").filter(Boolean);
+    const lines = stdout.split("\0");
     const entries = [];
-    for (let i = 0; i < parts.length; i += 2) {
-      entries.push({ key: parts[i], value: parts[i + 1] || "" });
+    for (const line of lines) {
+      const parts = line.split("\n");
+      entries.push({ key: parts[0], value: parts[1] });
     }
     return entries;
   } catch (error) {
