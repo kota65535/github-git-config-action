@@ -29606,12 +29606,12 @@ which.sync = whichSync
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const core = __nccwpck_require__(7484);
-const fs = __nccwpck_require__(9896);
 const path = __nccwpck_require__(6928);
 const exec = __nccwpck_require__(5020);
 
 const CHECKOUT_CREDENTIALS_PREFIX = "git-credentials-";
 const CHECKOUT_CREDENTIALS_SUFFIX = ".config";
+const INCLUDE_IF_KEY_REGEX = "^includeIf\\.gitdir:.*\\.path$";
 
 const isWithin = (root, candidate) => {
   if (!root || !candidate) return false;
@@ -29633,7 +29633,7 @@ const isCheckoutCredentialsPath = (value) => {
 
 const listIncludeIfPaths = () => {
   try {
-    const { stdout } = exec("git", ["config", "--null", "--local", "--get-regexp", "^includeIf\\.gitdir:.*\\.path$"]);
+    const { stdout } = exec("git", ["config", "--null", "--local", "--get-regexp", INCLUDE_IF_KEY_REGEX]);
     if (!stdout) {
       return [];
     }

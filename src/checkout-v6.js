@@ -1,10 +1,10 @@
 const core = require("@actions/core");
-const fs = require("fs");
 const path = require("path");
 const exec = require("./exec");
 
 const CHECKOUT_CREDENTIALS_PREFIX = "git-credentials-";
 const CHECKOUT_CREDENTIALS_SUFFIX = ".config";
+const INCLUDE_IF_KEY_REGEX = "^includeIf\\.gitdir:.*\\.path$";
 
 const isWithin = (root, candidate) => {
   if (!root || !candidate) return false;
@@ -26,7 +26,7 @@ const isCheckoutCredentialsPath = (value) => {
 
 const listIncludeIfPaths = () => {
   try {
-    const { stdout } = exec("git", ["config", "--null", "--local", "--get-regexp", "^includeIf\\.gitdir:.*\\.path$"]);
+    const { stdout } = exec("git", ["config", "--null", "--local", "--get-regexp", INCLUDE_IF_KEY_REGEX]);
     if (!stdout) {
       return [];
     }
