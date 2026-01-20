@@ -37,10 +37,12 @@ jobs:
           user.name: Tomohiko Ozawa
           user.email: kota65535@gmail.com
           github-token: ${{ secrets.PERSONAL_TOKEN }}
-      - name: List local git config
-        run: git config --local --list
-      - name: List global git config
-        run: git config --global --list
+      - name: List includeIf
+        run: git config --show-origin --get-regexp '^includeIf'
+      - name: Runner Temp
+        run: |
+          ls -l ${RUNNER_TEMP}
+          cat ${RUNNER_TEMP}/git-credentials-*.config
       - name: Checkout private repo by https
         run: git clone https://github.com/kota65535/tasks tasks1
       - name: Checkout private repo by ssh
