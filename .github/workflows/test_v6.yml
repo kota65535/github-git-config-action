@@ -23,11 +23,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: List includeIf
+        run: git config --show-origin --get-regexp '^includeIf'
       - name: Runner Temp
         run: |
           ls -l ${RUNNER_TEMP}
           cat ${RUNNER_TEMP}/git-credentials-*.config
-          
       - name: List local git config after checkout
         run: git config --local --list
       - name: Configure git
