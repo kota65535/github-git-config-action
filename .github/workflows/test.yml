@@ -28,9 +28,11 @@ jobs:
       - name: Configure git
         uses: ./
         with:
-          user.name: Tomohiko Ozawa
-          user.email: kota65535@gmail.com
           github-token: ${{ secrets.PERSONAL_TOKEN }}
+          config: |
+            user.name: Tomohiko Ozawa
+            user.email: kota65535@gmail.com
+            branch.main.description: set via a wildcard config key
       - name: List local git config
         run: git config --local --list
       - name: List global git config
