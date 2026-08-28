@@ -33827,7 +33827,12 @@ const flatten = (obj, prefix, out) => {
       flatten(v, key, out);
       continue;
     }
-    out[key] = String(v);
+    // A quoted empty scalar (`user.name: ""`) reaches here as an empty string.
+    const value = String(v);
+    if (!value) {
+      throw new Error(`config: value of "${key}" is empty`);
+    }
+    out[key] = value;
   }
   return out;
 };
