@@ -9,7 +9,7 @@ GitHub Action for configuring git credentials, username etc.
 
 ```yaml
   - name: Configure git
-    uses: kota65535/github-git-config-action@v1
+    uses: kota65535/github-git-config-action@v3
     with:
       user.name: Tomohiko Ozawa           # Set user.name
       user.email: kota65535@gmail.com     # Set user.email
