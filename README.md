@@ -5,12 +5,6 @@ GitHub Action for configuring git credentials, username etc.
 - All [git-config](https://git-scm.com/docs/git-config#_variables) options are available
 - Easily overrides credentials set by [checkout](https://github.com/actions/checkout) action's `persist-credentials`
 
-## Requirements
-
-This action runs on the `node24` runtime. It requires GitHub Actions Runner `v2.327.1` or later,
-which is preinstalled on GitHub-hosted runners. If you use self-hosted runners, update them before
-upgrading to `v3`. Use `@v2` if you cannot update your runners.
-
 ## Usage
 
 ```yaml
