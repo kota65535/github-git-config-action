@@ -35,7 +35,7 @@ function main(inputs) {
     } catch (error) {
       core.warning(error.message);
     }
-    
+
     exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, extraHeaderValue]);
     exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, urlInsteadOfValue]);
   }

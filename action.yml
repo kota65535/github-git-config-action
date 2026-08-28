@@ -12,7 +12,11 @@ inputs:
   github-host:
     description: GitHub server hostname
     default: github.com
-    
+  config:
+    description: |
+      Git config variables to set, written in YAML. Keys may be written either in dotted form
+      (`user.name: foo`) or nested (`user: {name: foo}`). All values must be scalars.
+
 runs:
   using: "node24"
   main: "dist/index.js"
