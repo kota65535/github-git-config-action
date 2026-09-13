@@ -1,5 +1,5 @@
-const core = require("@actions/core");
-const yaml = require("js-yaml");
+import * as core from "@actions/core";
+import yaml from "js-yaml";
 
 /**
  * Flattens a parsed config object into dotted git config keys.
@@ -82,9 +82,4 @@ const getInputs = () => {
 const getExtraHeaderKey = (githubHost) => `http.https://${githubHost}/.extraHeader`;
 const getUrlInsteadOfKey = (githubHost) => `url.https://${githubHost}/.insteadOf`;
 
-module.exports = {
-  getInputs,
-  parseConfig,
-  getExtraHeaderKey,
-  getUrlInsteadOfKey,
-};
+export { getInputs, parseConfig, getExtraHeaderKey, getUrlInsteadOfKey };

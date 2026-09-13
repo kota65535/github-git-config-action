@@ -1,6 +1,6 @@
-const core = require("@actions/core");
-const exec = require("./exec");
-const { getExtraHeaderKey, getUrlInsteadOfKey } = require("./input");
+import * as core from "@actions/core";
+import exec from "./exec.js";
+import { getExtraHeaderKey, getUrlInsteadOfKey } from "./input.js";
 
 const run = (inputs) => {
   const githubHost = inputs.githubHost;
@@ -14,4 +14,4 @@ const run = (inputs) => {
   }
 };
 
-module.exports = run;
+export default run;

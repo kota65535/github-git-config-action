@@ -17,15 +17,15 @@
   "license": "MIT",
   "author": "Tomohiko Ozawa <kota65535@gmail.com>",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
-    "build": "ncc build src/index.js",
+    "build": "ncc build src/index.js && printf 'import{createRequire}from\"node:module\";const require=createRequire(import.meta.url);\\n' | cat - dist/index.js > dist/index.tmp && mv dist/index.tmp dist/index.js",
     "format": "prettier --write \"src/**/*.js\"",
     "lint": "eslint --fix \"src/**/*.js\"",
     "prepare": "husky"
   },
   "dependencies": {
-    "@actions/core": "1.11.1",
-    "@actions/github": "6.0.1",
+    "@actions/core": "3.0.1",
     "execa": "5.1.1",
     "js-yaml": "4.1.0"
   },

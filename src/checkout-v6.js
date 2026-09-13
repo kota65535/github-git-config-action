@@ -1,6 +1,6 @@
-const core = require("@actions/core");
-const path = require("path");
-const exec = require("./exec");
+import * as core from "@actions/core";
+import path from "node:path";
+import exec from "./exec.js";
 
 const CHECKOUT_CREDENTIALS_PREFIX = "git-credentials-";
 const CHECKOUT_CREDENTIALS_SUFFIX = ".config";
@@ -60,4 +60,4 @@ const removeCheckoutV6Credentials = () => {
   }
 };
 
-module.exports = { removeCheckoutCredentials: removeCheckoutV6Credentials };
+export { removeCheckoutV6Credentials as removeCheckoutCredentials };

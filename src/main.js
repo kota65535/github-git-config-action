@@ -1,7 +1,7 @@
-const exec = require("./exec");
-const core = require("@actions/core");
-const { getExtraHeaderKey, getUrlInsteadOfKey } = require("./input");
-const { removeCheckoutCredentials } = require("./checkout-v6");
+import exec from "./exec.js";
+import * as core from "@actions/core";
+import { getExtraHeaderKey, getUrlInsteadOfKey } from "./input.js";
+import { removeCheckoutCredentials } from "./checkout-v6.js";
 
 function main(inputs) {
   // Set configs from dynamic inputs
@@ -41,4 +41,4 @@ function main(inputs) {
   }
 }
 
-module.exports = main;
+export default main;
