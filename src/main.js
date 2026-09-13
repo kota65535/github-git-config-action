@@ -2,7 +2,7 @@ const exec = require("./exec");
 const core = require("@actions/core");
 const { getExtraHeaderKey, getUrlInsteadOfKey } = require("./input");
 const { removeCheckoutCredentials } = require("./checkout-v6");
-const { setupGlobalConfig } = require("./global-config");
+const { setupGlobalConfig, setSecretConfig } = require("./global-config");
 
 function main(inputs) {
   // The "global" scope writes to a config file private to this job, via GIT_CONFIG_GLOBAL,
@@ -27,7 +27,7 @@ function main(inputs) {
     const githubHost = inputs.githubHost;
     const extraHeaderKey = getExtraHeaderKey(githubHost);
     const urlInsteadOfKey = getUrlInsteadOfKey(githubHost);
-    const extraHeaderValue = `AUTHORIZATION: basic ${base64Token}`;
+    const buildExtraHeaderValue = (token) => `AUTHORIZATION: basic ${token}`;
     const urlInsteadOfValue = `git@${githubHost}:`;
 
     // Remove checkout action's persistent credentials to avoid duplication of Authorization headers.
@@ -45,7 +45,13 @@ function main(inputs) {
       core.warning(error.message);
     }
 
-    exec("git", ["config", `--${scope}`, extraHeaderKey, extraHeaderValue]);
+    if (scope === "global") {
+      // Keeps the token out of the command line, where ps or a process audit log could read it.
+      setSecretConfig(extraHeaderKey, buildExtraHeaderValue, base64Token);
+    } else {
+      exec("git", ["config", `--${scope}`, extraHeaderKey, buildExtraHeaderValue(base64Token)]);
+    }
+    // Not sensitive, so the command line is fine.
     exec("git", ["config", `--${scope}`, urlInsteadOfKey, urlInsteadOfValue]);
   }
 }

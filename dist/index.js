@@ -33791,6 +33791,7 @@ module.exports = exec;
 const core = __nccwpck_require__(7484);
 const crypto = __nccwpck_require__(6982);
 const fs = __nccwpck_require__(9896);
+const os = __nccwpck_require__(857);
 const path = __nccwpck_require__(6928);
 const exec = __nccwpck_require__(5020);
 
@@ -33800,17 +33801,9 @@ const STATE_KEY = "globalConfigPath";
 // back to ~/.gitconfig, which would leak the token to the host, so we refuse to run instead.
 const MIN_GIT_VERSION = [2, 32, 0];
 
-// Pull in the pre-existing global config so that settings the runner relies on (safe.directory
-// written by the checkout action, for one) keep working once we take over GIT_CONFIG_GLOBAL.
-// git expands "~" itself, and silently skips include paths that do not exist.
-const INCLUDE_HEADER = [
-  "# Written by kota65535/github-git-config-action.",
-  "# Includes the pre-existing global config so that its settings are not lost.",
-  "[include]",
-  "\tpath = ~/.gitconfig",
-  "\tpath = ~/.config/git/config",
-  "",
-].join("\n");
+// Path of the file this module owns, once set up. Kept here rather than read back from the state,
+// because saveState does not update the environment of the running process.
+let configPath = null;
 
 /**
  * Compares two semantic-ish version triples.
@@ -33854,13 +33847,48 @@ const parseGitVersion = (stdout) => {
 };
 
 /**
+ * Lists the config files the new global config should include, in the order git would read them.
+ *
+ * If GIT_CONFIG_GLOBAL is already set, that file is the current global config, so including it is
+ * enough: whatever it already includes comes along. This is what makes running the action twice in
+ * one job additive rather than destructive.
+ *
+ * Otherwise the two files git looks for are used. git reads the XDG one first and ~/.gitconfig
+ * second, and the last value read wins, so the order is kept.
+ * cf. https://git-scm.com/docs/git-config#FILES
+ *
+ * @returns {string[]} Absolute paths, which may or may not exist. git skips the missing ones.
+ */
+const listIncludePaths = () => {
+  const existing = process.env.GIT_CONFIG_GLOBAL;
+  if (existing) {
+    return [existing];
+  }
+  const xdgConfigHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
+  return [path.join(xdgConfigHome, "git", "config"), path.join(os.homedir(), ".gitconfig")];
+};
+
+/**
+ * Quotes a path for use as a git config value.
+ *
+ * git treats a backslash as an escape character even outside quotes, and would otherwise eat the
+ * separators of a Windows path, so quote the value and escape what git escapes.
+ *
+ * @param {string} value - Path to quote.
+ * @returns {string} Quoted and escaped value.
+ *
+ * @example
+ * quoteConfigValue("C:\\Users\\runner\\.gitconfig"); // '"C:\\\\Users\\\\runner\\\\.gitconfig"'
+ */
+const quoteConfigValue = (value) => `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+
+/**
  * Points GIT_CONFIG_GLOBAL at a config file private to the current job.
  *
  * The file lives under RUNNER_TEMP with mode 0600, so the token written into it never reaches
  * ~/.gitconfig or .git/config. Because GIT_CONFIG_GLOBAL is exported through GITHUB_ENV, it only
  * applies to the remaining steps of this job: a later job on the same self-hosted runner starts
- * without it and reads the untouched ~/.gitconfig. Only the path, never the token, is exposed to
- * the process environment.
+ * without it and reads the untouched ~/.gitconfig. Only the path is exported, never the token.
  *
  * git still treats the file as the global config, so callers keep using `git config --global`.
  *
@@ -33884,8 +33912,18 @@ const setupGlobalConfig = () => {
     );
   }
 
-  const configPath = path.join(runnerTemp, `git-config-${crypto.randomUUID()}.config`);
-  fs.writeFileSync(configPath, INCLUDE_HEADER, { mode: 0o600 });
+  // Pull in the config git was reading until now, so that settings the runner relies on, such as
+  // the safe.directory entries written by the checkout action, keep working.
+  const header = [
+    "# Written by kota65535/github-git-config-action.",
+    "# Includes the config that was in effect before, so that its settings are not lost.",
+    "[include]",
+    ...listIncludePaths().map((p) => `\tpath = ${quoteConfigValue(p)}`),
+    "",
+  ].join("\n");
+
+  configPath = path.join(runnerTemp, `git-config-${crypto.randomUUID()}.config`);
+  fs.writeFileSync(configPath, header, { mode: 0o600 });
   // writeFileSync applies the umask to the mode, so set it again to be sure.
   fs.chmodSync(configPath, 0o600);
 
@@ -33898,6 +33936,36 @@ const setupGlobalConfig = () => {
 };
 
 /**
+ * Sets a config value without ever passing it on the command line.
+ *
+ * `git config` takes its value as an argument, which `ps` and process audit logs can capture, so
+ * a random placeholder is written instead and then replaced inside the file. Letting git write
+ * first means git decides the section layout and the escaping of the key.
+ *
+ * Only works for the job-local global config, whose path this module owns.
+ *
+ * @param {string} key - Git config key to set.
+ * @param {(placeholder: string) => string} buildValue - Builds the value from the placeholder that
+ *   stands in for the secret, ex. `` (p) => `AUTHORIZATION: basic ${p}` ``.
+ * @param {string} secret - Value substituted for the placeholder once it is in the file.
+ * @returns {void}
+ * @throws {Error} If called before {@link setupGlobalConfig}, or if the placeholder is not found.
+ */
+const setSecretConfig = (key, buildValue, secret) => {
+  if (!configPath) {
+    throw new Error("setSecretConfig was called before the job-local global config was set up");
+  }
+  const placeholder = crypto.randomUUID();
+  exec("git", ["config", "--global", key, buildValue(placeholder)]);
+
+  const content = fs.readFileSync(configPath, "utf8");
+  if (!content.includes(placeholder)) {
+    throw new Error(`could not find the placeholder for "${key}" in ${configPath}`);
+  }
+  fs.writeFileSync(configPath, content.replace(placeholder, secret), { mode: 0o600 });
+};
+
+/**
  * Removes the config file created by {@link setupGlobalConfig}.
  *
  * Nothing leaks if this never runs: a cancelled or killed job leaves the file behind, but no later
@@ -33906,19 +33974,27 @@ const setupGlobalConfig = () => {
  * @returns {void}
  */
 const cleanupGlobalConfig = () => {
-  const configPath = core.getState(STATE_KEY);
-  if (!configPath) {
+  const savedPath = core.getState(STATE_KEY);
+  if (!savedPath) {
     return;
   }
   try {
-    fs.rmSync(configPath, { force: true });
-    core.info(`removed the job-local global config: ${configPath}`);
+    fs.rmSync(savedPath, { force: true });
+    core.info(`removed the job-local global config: ${savedPath}`);
   } catch (error) {
     core.warning(error.message);
   }
 };
 
-module.exports = { setupGlobalConfig, cleanupGlobalConfig, parseGitVersion, compareVersions };
+module.exports = {
+  setupGlobalConfig,
+  setSecretConfig,
+  cleanupGlobalConfig,
+  listIncludePaths,
+  quoteConfigValue,
+  parseGitVersion,
+  compareVersions,
+};
 
 
 /***/ }),
@@ -34027,7 +34103,7 @@ const exec = __nccwpck_require__(5020);
 const core = __nccwpck_require__(7484);
 const { getExtraHeaderKey, getUrlInsteadOfKey } = __nccwpck_require__(5409);
 const { removeCheckoutCredentials } = __nccwpck_require__(7922);
-const { setupGlobalConfig } = __nccwpck_require__(1417);
+const { setupGlobalConfig, setSecretConfig } = __nccwpck_require__(1417);
 
 function main(inputs) {
   // The "global" scope writes to a config file private to this job, via GIT_CONFIG_GLOBAL,
@@ -34052,7 +34128,7 @@ function main(inputs) {
     const githubHost = inputs.githubHost;
     const extraHeaderKey = getExtraHeaderKey(githubHost);
     const urlInsteadOfKey = getUrlInsteadOfKey(githubHost);
-    const extraHeaderValue = `AUTHORIZATION: basic ${base64Token}`;
+    const buildExtraHeaderValue = (token) => `AUTHORIZATION: basic ${token}`;
     const urlInsteadOfValue = `git@${githubHost}:`;
 
     // Remove checkout action's persistent credentials to avoid duplication of Authorization headers.
@@ -34070,7 +34146,13 @@ function main(inputs) {
       core.warning(error.message);
     }
 
-    exec("git", ["config", `--${scope}`, extraHeaderKey, extraHeaderValue]);
+    if (scope === "global") {
+      // Keeps the token out of the command line, where ps or a process audit log could read it.
+      setSecretConfig(extraHeaderKey, buildExtraHeaderValue, base64Token);
+    } else {
+      exec("git", ["config", `--${scope}`, extraHeaderKey, buildExtraHeaderValue(base64Token)]);
+    }
+    // Not sensitive, so the command line is fine.
     exec("git", ["config", `--${scope}`, urlInsteadOfKey, urlInsteadOfValue]);
   }
 }
