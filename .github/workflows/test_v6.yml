@@ -34,9 +34,11 @@ jobs:
       - name: Configure git
         uses: ./
         with:
-          user.name: Tomohiko Ozawa
-          user.email: kota65535@gmail.com
           github-token: ${{ secrets.PERSONAL_TOKEN }}
+          config: |
+            user:
+              name: Tomohiko Ozawa
+              email: kota65535@gmail.com
       - name: List includeIf
         run: git config --show-origin --get-regexp '^includeIf'
       - name: Runner Temp
