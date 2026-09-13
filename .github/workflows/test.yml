@@ -25,6 +25,15 @@ jobs:
         uses: actions/checkout@v4
       - name: List local git config after checkout
         run: git config --local --list
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .tool-versions
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
       - name: Configure git
         uses: ./
         with:
