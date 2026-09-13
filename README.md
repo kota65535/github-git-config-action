@@ -26,6 +26,10 @@ GitHub Action for configuring git credentials, username etc.
 | `github-token` | GitHub personal access token to use as git credentials                                                   | No       | N/A          |
 | `github-host`  | GitHub server hostname                                                                                   | No       | `github.com` |
 
+`scope: global` writes to a file private to the job via `GIT_CONFIG_GLOBAL`, never to
+`~/.gitconfig`, so a later job on the same runner cannot read the token. It requires git 2.32+ and
+`RUNNER_TEMP`, and fails rather than silently falling back.
+
 ## Config
 
 Any [git config variable](https://git-scm.com/docs/git-config#_variables) can be set through the `config` input.
@@ -77,4 +81,5 @@ placeholder (ex. `branch.<name>.remote`) usable.
         user.email: kota65535@gmail.com
 ```
 
-`scope`, `github-token` and `github-host` are unchanged.
+The `github-token` and `github-host` inputs are unchanged. `scope: global` no longer persists
+across jobs on the same runner, and now needs git 2.32+; use `local` to write to `.git/config`.
