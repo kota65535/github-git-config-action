@@ -43,7 +43,7 @@ jobs:
             exit 1
           }
       - name: Configure git
-        uses: ./
+        uses: kota65535/github-git-config-action@v1
         with:
           github-token: ${{ secrets.PERSONAL_TOKEN }}
           config: |
