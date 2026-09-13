@@ -30,7 +30,7 @@
     "js-yaml": "4.1.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "0.38.3",
+    "@vercel/ncc": "0.45.0",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.2",
     "eslint-config-standard": "17.1.0",
