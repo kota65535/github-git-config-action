@@ -1,4 +1,5 @@
 const exec = require("./exec");
+const { unsetConfig } = require("./exec");
 const core = require("@actions/core");
 const { getExtraHeaderKey, getUrlInsteadOfKey } = require("./input");
 const { removeCheckoutCredentials } = require("./checkout-v6");
@@ -30,11 +31,7 @@ function main(inputs) {
     // Value pattern should be case-insensitive, but the current git version (2.36.1) does not allow the flag "(?i)".
     // So we have to use the exact pattern to match.
     // cf. https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L62
-    try {
-      exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
-    } catch (error) {
-      core.warning(error.message);
-    }
+    unsetConfig("local", extraHeaderKey, "^AUTHORIZATION: basic");
 
     exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, extraHeaderValue]);
     exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, urlInsteadOfValue]);
