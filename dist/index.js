@@ -33705,6 +33705,7 @@ which.sync = whichSync
 const core = __nccwpck_require__(7484);
 const path = __nccwpck_require__(6928);
 const exec = __nccwpck_require__(5020);
+const { unsetConfig } = __nccwpck_require__(5020);
 
 const CHECKOUT_CREDENTIALS_PREFIX = "git-credentials-";
 const CHECKOUT_CREDENTIALS_SUFFIX = ".config";
@@ -33756,11 +33757,7 @@ const removeCheckoutV6Credentials = () => {
     if (!isCheckoutCredentialsPath(value)) {
       continue;
     }
-    try {
-      exec("git", ["config", "--local", "--unset-all", key]);
-    } catch (error) {
-      core.warning(error.message);
-    }
+    unsetConfig("local", key);
   }
 };
 
@@ -33775,12 +33772,40 @@ module.exports = { removeCheckoutCredentials: removeCheckoutV6Credentials };
 const execa = __nccwpck_require__(8204);
 const core = __nccwpck_require__(7484);
 
+// Exit code of `git config --unset-all` when the given key does not exist.
+const GIT_CONFIG_KEY_NOT_FOUND = 5;
+
 const exec = (file, options) => {
   core.info(`running command: ${file} ${(options || []).join(" ")}`);
   return execa.sync(file, options);
 };
 
+/**
+ * Unsets a git config entry, ignoring the "key not found" case.
+ *
+ * The key is often absent (e.g. the checkout action did not store credentials there),
+ * which is a normal situation and should not be reported as a warning.
+ *
+ * @param {string} scope - Config scope, e.g. "local" or "global".
+ * @param {string} key - Config key to unset.
+ * @param {string} [valuePattern] - Optional regex matching the values to unset.
+ */
+const unsetConfig = (scope, key, valuePattern) => {
+  const args = ["config", `--${scope}`, "--unset-all", key];
+  if (valuePattern !== undefined) {
+    args.push(valuePattern);
+  }
+  try {
+    exec("git", args);
+  } catch (error) {
+    if (error.exitCode !== GIT_CONFIG_KEY_NOT_FOUND) {
+      core.warning(error.message);
+    }
+  }
+};
+
 module.exports = exec;
+module.exports.unsetConfig = unsetConfig;
 
 
 /***/ }),
@@ -33886,6 +33911,7 @@ module.exports = {
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const exec = __nccwpck_require__(5020);
+const { unsetConfig } = __nccwpck_require__(5020);
 const core = __nccwpck_require__(7484);
 const { getExtraHeaderKey, getUrlInsteadOfKey } = __nccwpck_require__(5409);
 const { removeCheckoutCredentials } = __nccwpck_require__(7922);
@@ -33917,11 +33943,7 @@ function main(inputs) {
     // Value pattern should be case-insensitive, but the current git version (2.36.1) does not allow the flag "(?i)".
     // So we have to use the exact pattern to match.
     // cf. https://github.com/actions/checkout/blob/main/src/git-auth-helper.ts#L62
-    try {
-      exec("git", ["config", "--local", "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
-    } catch (error) {
-      core.warning(error.message);
-    }
+    unsetConfig("local", extraHeaderKey, "^AUTHORIZATION: basic");
 
     exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, extraHeaderValue]);
     exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, urlInsteadOfValue]);
@@ -33936,20 +33958,15 @@ module.exports = main;
 /***/ 6043:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const core = __nccwpck_require__(7484);
-const exec = __nccwpck_require__(5020);
+const { unsetConfig } = __nccwpck_require__(5020);
 const { getExtraHeaderKey, getUrlInsteadOfKey } = __nccwpck_require__(5409);
 
 const run = (inputs) => {
   const githubHost = inputs.githubHost;
   const extraHeaderKey = getExtraHeaderKey(githubHost);
   const urlInsteadOfKey = getUrlInsteadOfKey(githubHost);
-  try {
-    exec("git", ["config", `--${inputs.scope}`, "--unset-all", extraHeaderKey, "^AUTHORIZATION: basic"]);
-    exec("git", ["config", `--${inputs.scope}`, "--unset-all", urlInsteadOfKey, `git@${githubHost}:`]);
-  } catch (error) {
-    core.warning(error.message);
-  }
+  unsetConfig(inputs.scope, extraHeaderKey, "^AUTHORIZATION: basic");
+  unsetConfig(inputs.scope, urlInsteadOfKey, `git@${githubHost}:`);
 };
 
 module.exports = run;

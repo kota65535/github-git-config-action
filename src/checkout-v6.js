@@ -1,6 +1,7 @@
 const core = require("@actions/core");
 const path = require("path");
 const exec = require("./exec");
+const { unsetConfig } = require("./exec");
 
 const CHECKOUT_CREDENTIALS_PREFIX = "git-credentials-";
 const CHECKOUT_CREDENTIALS_SUFFIX = ".config";
@@ -52,11 +53,7 @@ const removeCheckoutV6Credentials = () => {
     if (!isCheckoutCredentialsPath(value)) {
       continue;
     }
-    try {
-      exec("git", ["config", "--local", "--unset-all", key]);
-    } catch (error) {
-      core.warning(error.message);
-    }
+    unsetConfig("local", key);
   }
 };
 
