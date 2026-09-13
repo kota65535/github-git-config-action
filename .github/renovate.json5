@@ -6,6 +6,11 @@
     ":disableRateLimiting",
     ":automergeMinor"
   ],
+  // Let the Build dist workflow commit on top of Renovate branches without
+  // making Renovate treat the PR as modified, which would also stop automerge.
+  "gitIgnoredAuthors": [
+    "41898282+github-actions[bot]@users.noreply.github.com"
+  ],
   "labels": [
     "dependencies"
   ],
