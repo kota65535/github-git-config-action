@@ -5,7 +5,11 @@ branding:
   color: "orange"
 inputs:
   scope:
-    description: Scope (global, local etc)
+    description: |
+      Scope to write the config to (`global`, `local` or `system`).
+      `global` does not write to `~/.gitconfig`. It keeps the config in a file private to the
+      current job via `GIT_CONFIG_GLOBAL`, so that credentials cannot be read by a later job on
+      the same runner. This requires git 2.32 or later.
     default: global
   github-token:
     description: GitHub personal access token used as git credentials

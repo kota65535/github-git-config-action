@@ -2,11 +2,20 @@ const exec = require("./exec");
 const core = require("@actions/core");
 const { getExtraHeaderKey, getUrlInsteadOfKey } = require("./input");
 const { removeCheckoutCredentials } = require("./checkout-v6");
+const { setupGlobalConfig } = require("./global-config");
 
 function main(inputs) {
+  // The "global" scope writes to a config file private to this job, via GIT_CONFIG_GLOBAL,
+  // so that the token never reaches ~/.gitconfig. git still treats that file as the global
+  // config, so the --global flag below is unchanged.
+  const scope = inputs.scope;
+  if (scope === "global") {
+    setupGlobalConfig();
+  }
+
   // Set configs from dynamic inputs
   for (const [k, v] of Object.entries(inputs.configs)) {
-    exec("git", ["config", `--${inputs.scope}`, k, v]);
+    exec("git", ["config", `--${scope}`, k, v]);
   }
 
   // Configure credentials if github-token input presents
@@ -36,8 +45,8 @@ function main(inputs) {
       core.warning(error.message);
     }
 
-    exec("git", ["config", `--${inputs.scope}`, extraHeaderKey, extraHeaderValue]);
-    exec("git", ["config", `--${inputs.scope}`, urlInsteadOfKey, urlInsteadOfValue]);
+    exec("git", ["config", `--${scope}`, extraHeaderKey, extraHeaderValue]);
+    exec("git", ["config", `--${scope}`, urlInsteadOfKey, urlInsteadOfValue]);
   }
 }
 
