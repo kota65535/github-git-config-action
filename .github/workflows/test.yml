@@ -41,3 +41,26 @@ jobs:
         run: git clone https://github.com/kota65535/tasks tasks1
       - name: Checkout private repo by ssh
         run: git clone git@github.com:kota65535/tasks.git tasks2
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .tool-versions
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npx eslint "src/**/*.js"
+      - name: Build
+        run: npm run build
+      - name: Check dist is up to date
+        run: |
+          git diff --exit-code -- dist || {
+            echo "::error::dist is out of date. Run 'npm run build' and commit the result."
+            exit 1
+          }
