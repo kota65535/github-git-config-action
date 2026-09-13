@@ -6,53 +6,37 @@ on:
       - 'renovate/**'
 
 jobs:
-  # Builds with no credentials available: a malicious dependency version
-  # proposed by Renovate runs lifecycle scripts here, so nothing in this job
-  # may hold a token.
-  build:
+  build-dist:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # Keep the push token out of .git/config, where installed packages
+          # could read it.
           persist-credentials: false
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .tool-versions
           cache: npm
+      # Lifecycle scripts are skipped so that a dependency version proposed by
+      # Renovate cannot run arbitrary code here. Only husky's prepare hook
+      # relies on them, and that is not needed in CI.
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Build
         run: npm run build
-      - name: Upload dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
-          retention-days: 1
-
-  # Holds the PAT, but never runs npm or any other third-party code.
-  push:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-          # Push with a PAT so that the resulting commit triggers the Test workflow.
-          token: ${{ secrets.PERSONAL_TOKEN }}
-      - name: Download dist
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
       - name: Commit dist if changed
+        env:
+          # A PAT rather than GITHUB_TOKEN, so the commit triggers the Test
+          # workflow. Scoped to write access on this repository only.
+          TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
           git add dist
           git diff --cached --quiet && exit 0
           git -c user.name='github-actions[bot]' \
               -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
               commit -m 'build: regenerate dist'
-          git push
+          git push "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}" \
+              "HEAD:${GITHUB_REF_NAME}"
