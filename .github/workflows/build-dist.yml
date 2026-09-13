@@ -1,0 +1,58 @@
+name: Build dist
+
+on:
+  push:
+    branches:
+      - 'renovate/**'
+
+jobs:
+  # Builds with no credentials available: a malicious dependency version
+  # proposed by Renovate runs lifecycle scripts here, so nothing in this job
+  # may hold a token.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .tool-versions
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
+
+  # Holds the PAT, but never runs npm or any other third-party code.
+  push:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          # Push with a PAT so that the resulting commit triggers the Test workflow.
+          token: ${{ secrets.PERSONAL_TOKEN }}
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Commit dist if changed
+        run: |
+          git add dist
+          git diff --cached --quiet && exit 0
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'build: regenerate dist'
+          git push
