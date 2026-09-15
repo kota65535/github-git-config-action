@@ -65,6 +65,11 @@ const parseConfig = (raw) => {
 const getInputs = () => {
   const scope = core.getInput("scope");
   const githubToken = core.getInput("github-token");
+  // Mask the token in logs. Values coming from `secrets` are masked automatically,
+  // but a token passed as a literal or fetched at runtime is not.
+  if (githubToken) {
+    core.setSecret(githubToken);
+  }
   const githubHost = core.getInput("github-host");
   const configs = parseConfig(core.getInput("config"));
 
